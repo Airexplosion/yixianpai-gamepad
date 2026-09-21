@@ -23,8 +23,8 @@ namespace YxGamepad
             GamepadApi.SetLogger(ctx.Log.Info);
             Gamepad.Init(ctx);
             _ui = new UiKit(ctx);
-            _panel = new GamepadPanel(_ui);
-            ctx.Log.Info("手柄适配已加载：设置面板底部有「手柄设置」按钮，可看状态 / 改键。");
+            _panel = new GamepadPanel(_ui, ctx);
+            ctx.Log.Info(ctx.T("手柄适配已加载：设置面板底部有「手柄设置」按钮，可看状态 / 改键。", "Gamepad support loaded: a \"Gamepad Settings\" button at the bottom of the settings panel shows status / rebinding."));
         }
 
         public override void OnUpdate()
@@ -47,7 +47,7 @@ namespace YxGamepad
             if (root == null) return;
             Button tmpl = NativeUi.FindButton(root, null);   // 克隆设置面板里一个原生按钮 → 原生外观
             if (tmpl == null) return;                          // 面板里还没按钮，下次再试
-            _settingsBtn = NativeUi.CloneButton(Context, tmpl, root, "手柄设置", "打开手柄设置", OpenPanel);
+            _settingsBtn = NativeUi.CloneButton(Context, tmpl, root, Context.T("手柄设置", "Gamepad Settings"), Context.T("打开手柄设置", "Open gamepad settings"), OpenPanel);
             if (_settingsBtn == null || !_settingsBtn.IsAlive) { _settingsBtn = null; return; }
             // 锚到设置面板底部居中，不依赖面板尺寸。
             var brt = _settingsBtn.GameObject.GetComponent(typeof(RectTransform)) as RectTransform;

@@ -27,6 +27,7 @@ namespace YxGamepad
         static readonly Color BodyColor = new Color(0.12f, 0.11f, 0.09f, 1f);
 
         readonly UiKit _ui;
+        readonly ModContext _ctx;
         GameObject _root;
         TextMeshProUGUI _pad;
         TextMeshProUGUI _raw;
@@ -52,7 +53,7 @@ namespace YxGamepad
         Vector2 _lsC, _rsC;   // 摇杆中心（画布坐标）
         string _srcShown = "";
 
-        public GamepadPanel(UiKit ui) { _ui = ui; }
+        public GamepadPanel(UiKit ui, ModContext ctx) { _ui = ui; _ctx = ctx; }
 
         public bool IsOpen { get { return _root != null; } }
 
@@ -69,8 +70,8 @@ namespace YxGamepad
             _root.AddComponent(typeof(GraphicRaycaster));
 
             Transform p = _root.transform;
-            _ui.Label(p, "title", "手柄设置（手柄：方向选择 / 确认键激活 / 取消键关闭）", new Vector2(16f, -6f), new Vector2(560f, 34f), 20f);
-            _close = _ui.TextButton(p, "close", "关闭", new Vector2(PanelSize.x - 92f, -8f), new Vector2(76f, 32f), Close);
+            _ui.Label(p, "title", _ctx.T("手柄设置（手柄：方向选择 / 确认键激活 / 取消键关闭）", "Gamepad Settings (controller: D-pad to select / Confirm to activate / Cancel to close)"), new Vector2(16f, -6f), new Vector2(560f, 34f), 20f);
+            _close = _ui.TextButton(p, "close", _ctx.T("关闭", "Close"), new Vector2(PanelSize.x - 92f, -8f), new Vector2(76f, 32f), Close);
             _pad = _ui.Label(p, "pad", "", new Vector2(16f, -48f), new Vector2(PanelSize.x - 32f, 26f), 18f);
             _raw = _ui.Label(p, "raw", "", new Vector2(16f, -76f), new Vector2(PanelSize.x - 32f, 24f), 15f);
             _raw.color = Dim;
@@ -204,8 +205,8 @@ namespace YxGamepad
             _face[2] = BoxLabeled(p, "F2", fx - 26f, fy, 28f, 28f, out _faceLabel[2]);
             _face[1] = BoxLabeled(p, "F1", fx + 26f, fy, 28f, 28f, out _faceLabel[1]);
             // 小标注
-            _ui.Label(p, "lLS", "左摇杆", new Vector2(148f, -214f), new Vector2(60f, 18f), 12f).color = Dim;
-            _ui.Label(p, "lRS", "右摇杆", new Vector2(404f, -254f), new Vector2(60f, 18f), 12f).color = Dim;
+            _ui.Label(p, "lLS", _ctx.T("左摇杆", "L Stick"), new Vector2(148f, -214f), new Vector2(60f, 18f), 12f).color = Dim;
+            _ui.Label(p, "lRS", _ctx.T("右摇杆", "R Stick"), new Vector2(404f, -254f), new Vector2(60f, 18f), 12f).color = Dim;
         }
 
         Image Box(Transform parent, string name, float cx, float cy, float w, float h, Color col)
@@ -300,7 +301,7 @@ namespace YxGamepad
                 if (canRebind)
                 {
                     int idx = i;
-                    _rebind[i] = _ui.TextButton(p, "r" + S(i), "改键", new Vector2(bx + 152f, y + 1f), new Vector2(62f, 24f), () => OnRebind(idx));
+                    _rebind[i] = _ui.TextButton(p, "r" + S(i), _ctx.T("改键", "Rebind"), new Vector2(bx + 152f, y + 1f), new Vector2(62f, 24f), () => OnRebind(idx));
                 }
             }
         }
@@ -312,11 +313,11 @@ namespace YxGamepad
             if (_pad != null)
             {
                 if (PadBridge.Connected)
-                    _pad.text = "当前手柄：" + PadBridge.Name + "（" + PadBridge.Src + " 槽" + PadBridge.SlotText + "）";
+                    _pad.text = _ctx.T("当前手柄：", "Current controller: ") + PadBridge.Name + _ctx.T("（", " (") + PadBridge.Src + _ctx.T(" 槽", " slot ") + PadBridge.SlotText + _ctx.T("）", ")");
                 else
-                    _pad.text = "未检测到手柄（插上手柄、并确认没被 Steam 输入接管）";
+                    _pad.text = _ctx.T("未检测到手柄（插上手柄、并确认没被 Steam 输入接管）", "No controller detected (plug one in and make sure Steam Input hasn't taken it over)");
             }
-            if (_raw != null) _raw.text = "实时：" + RawText();
+            if (_raw != null) _raw.text = _ctx.T("实时：", "Live: ") + RawText();
             UpdateDiagram();
             UpdateHighlight();
 
@@ -326,13 +327,13 @@ namespace YxGamepad
             {
                 if (_bind[i] == null) continue;
                 bool isTarget = rebinding && rIdx == i;
-                if (isTarget) { _bind[i].text = "请按手柄上的键…"; _bind[i].color = Prompt; }
+                if (isTarget) { _bind[i].text = _ctx.T("请按手柄上的键…", "Press a button on the controller…"); _bind[i].color = Prompt; }
                 else { _bind[i].text = Gamepad.ActionBindingText(i); _bind[i].color = Gamepad.ActionActive(i) ? Active : Normal; }
-                if (_rebind[i] != null && _rebind[i].IsAlive) _rebind[i].SetText(isTarget ? "取消" : "改键");
+                if (_rebind[i] != null && _rebind[i].IsAlive) _rebind[i].SetText(isTarget ? _ctx.T("取消", "Cancel") : _ctx.T("改键", "Rebind"));
             }
         }
 
-        static string RawText()
+        string RawText()
         {
             Gamepad.Snapshot snap = Gamepad.Capture();
             var sb = new StringBuilder();
@@ -345,7 +346,7 @@ namespace YxGamepad
                     float v = snap.axes[a];
                     if (v > 0.5f || v < -0.5f) { if (sb.Length > 0) sb.Append(' '); sb.Append(Gamepad.AxisLabel(a)).Append(v > 0 ? '+' : '-'); }
                 }
-            return sb.Length > 0 ? sb.ToString() : "（无）";
+            return sb.Length > 0 ? sb.ToString() : _ctx.T("（无）", "(none)");
         }
 
         static string S(int i) { return i.ToString(CultureInfo.InvariantCulture); }

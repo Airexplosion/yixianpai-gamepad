@@ -18,6 +18,8 @@ namespace YxGamepad
         static Action<string> s_log;
         public static void SetLogger(Action<string> log) { s_log = log; }
         static void W(string m) { if (!DIAG) return; try { if (s_log != null) s_log(m); } catch (Exception) { } }
+        static bool s_en;
+        static string T(string zh, string en) { return s_en ? en : zh; }
         // 停用/热重载时收起自建 UI（准星、悬浮）。热键/订阅/任务由宿主自动清，这里只管自己 new 的对象。
         public static void Shutdown() { try { HideReticle(); SetHover(null); SetHoverGeneral(null); } catch (Exception) { } }
 
@@ -98,6 +100,7 @@ namespace YxGamepad
         static readonly Act[] BIND_ACTS = { Act.NavUp, Act.NavDown, Act.NavLeft, Act.NavRight, Act.RUp, Act.RDown, Act.RLeft, Act.RRight, Act.Refine, Act.Replace, Act.Confirm, Act.Cancel, Act.YuPing };
         static readonly string[] BIND_KEYS = { "NavUp", "NavDown", "NavLeft", "NavRight", "RUp", "RDown", "RLeft", "RRight", "Refine", "Replace", "Confirm", "Cancel", "YuPing" };
         static readonly string[] BIND_DESC = { "上导航", "下导航", "左导航", "右导航", "右摇杆上=摆牌", "右摇杆下=收回", "右摇杆左=换位", "右摇杆右=换位", "炼化", "换牌", "确认", "取消", "五行玉瓶" };
+        static readonly string[] BIND_DESC_EN = { "Nav Up", "Nav Down", "Nav Left", "Nav Right", "RStick Up = Place", "RStick Down = Recall", "RStick Left = Swap", "RStick Right = Swap", "Refine", "Reroll", "Confirm", "Cancel", "Jade Vase" };
         static ConfigEntry<string>[] s_bindCfg;
         static string FormatSpec(Spec s)
         {
@@ -122,7 +125,7 @@ namespace YxGamepad
             for (int i = 0; i < BIND_ACTS.Length; i++) {
                 string def = ""; Spec cur;
                 if (s_bind != null && s_bind.TryGetValue(BIND_ACTS[i], out cur)) def = FormatSpec(cur);
-                s_bindCfg[i] = ctx.Config.Bind("键位", BIND_KEYS[i], def, BIND_DESC[i] + "（Button:序号 或 Axis:序号:方向）");
+                s_bindCfg[i] = ctx.Config.Bind("键位", BIND_KEYS[i], def, (s_en ? BIND_DESC_EN : BIND_DESC)[i] + T("（Button:序号 或 Axis:序号:方向）", " (Button:index or Axis:index:dir)"));
             }
         }
         static void ApplyOverrides()
@@ -136,6 +139,7 @@ namespace YxGamepad
 
         // ── 手柄设置面板用：动作展示表 + 改键状态机 ──────────────
         static readonly string[] FIXED_NAMES = { "合成", "突破", "准备(长按RT)", "设置", "表情" };
+        static readonly string[] FIXED_NAMES_EN = { "Fuse", "Breakthrough", "Ready (hold RT)", "Settings", "Emote" };
         static Spec FixedSpec(int fi)
         {
             if (fi == 0) return Ax(4, +1);   // 合成 = LT
@@ -147,7 +151,7 @@ namespace YxGamepad
         /// <summary>面板显示的动作总数（可改 + 固定）。</summary>
         public static int ActionCount { get { return BIND_ACTS.Length + FIXED_NAMES.Length; } }
         /// <summary>第 i 个动作的中文名。</summary>
-        public static string ActionName(int i) { return i < BIND_ACTS.Length ? BIND_DESC[i] : FIXED_NAMES[i - BIND_ACTS.Length]; }
+        public static string ActionName(int i) { return i < BIND_ACTS.Length ? (s_en ? BIND_DESC_EN : BIND_DESC)[i] : (s_en ? FIXED_NAMES_EN : FIXED_NAMES)[i - BIND_ACTS.Length]; }
         static Spec ActionSpec(int i)
         {
             if (i < BIND_ACTS.Length) { Spec s; if (s_bind != null && s_bind.TryGetValue(BIND_ACTS[i], out s)) return s; return Btn(-1); }
@@ -162,17 +166,18 @@ namespace YxGamepad
 
         static readonly string[] BTN_NAME = { "A", "B", "X", "Y", "LB", "RB", "Back", "Start", "L3", "R3", "Guide" };
         static readonly string[] AX_NAME = { "左摇杆X", "左摇杆Y", "右摇杆X", "右摇杆Y", "LT", "RT", "十字键X", "十字键Y" };
+        static readonly string[] AX_NAME_EN = { "LStick X", "LStick Y", "RStick X", "RStick Y", "LT", "RT", "DPad X", "DPad Y" };
         /// <summary>按钮序号的可读名（面板实时输入用）。</summary>
-        public static string ButtonLabel(int i) { return i >= 0 && i < BTN_NAME.Length ? BTN_NAME[i] : ("按钮" + i.ToString(CultureInfo.InvariantCulture)); }
+        public static string ButtonLabel(int i) { return i >= 0 && i < BTN_NAME.Length ? BTN_NAME[i] : (T("按钮", "Button ") + i.ToString(CultureInfo.InvariantCulture)); }
         /// <summary>轴序号的可读名（面板实时输入用）。</summary>
-        public static string AxisLabel(int i) { return i >= 0 && i < AX_NAME.Length ? AX_NAME[i] : ("轴" + i.ToString(CultureInfo.InvariantCulture)); }
+        public static string AxisLabel(int i) { return i >= 0 && i < AX_NAME.Length ? (s_en ? AX_NAME_EN : AX_NAME)[i] : (T("轴", "Axis ") + i.ToString(CultureInfo.InvariantCulture)); }
         static string SpecText(Spec s)
         {
             if (s.kind == InKind.Button) {
                 if (s.idx < 0) return "-";
-                return (s.idx < BTN_NAME.Length ? BTN_NAME[s.idx] : ("按钮" + s.idx.ToString(CultureInfo.InvariantCulture))) + " 键";
+                return (s.idx < BTN_NAME.Length ? BTN_NAME[s.idx] : (T("按钮", "Button ") + s.idx.ToString(CultureInfo.InvariantCulture))) + T(" 键", "");
             }
-            string an = s.idx >= 0 && s.idx < AX_NAME.Length ? AX_NAME[s.idx] : ("轴" + s.idx.ToString(CultureInfo.InvariantCulture));
+            string an = s.idx >= 0 && s.idx < AX_NAME.Length ? (s_en ? AX_NAME_EN : AX_NAME)[s.idx] : (T("轴", "Axis ") + s.idx.ToString(CultureInfo.InvariantCulture));
             return an + (s.dir > 0 ? " +" : " -");
         }
 
@@ -1020,6 +1025,7 @@ namespace YxGamepad
         // ── 入口 + 主循环 ─────────────────────────────────────────
         public static void Init(ModContext ctx)
         {
+            s_en = ctx != null && ctx.Lang == "en";
             LoadDefaults(); BindConfig(ctx); ApplyOverrides();
         }
         public static void Tick()
