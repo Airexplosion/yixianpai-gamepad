@@ -1,0 +1,12 @@
+{
+  "id": "com.yx.gamepad",
+  "name": "手柄适配",
+  "version": "0.1.0",
+  "author": "yxp",
+  "description": "Xbox 手柄操作弈仙牌：左摇杆导航牌面/菜单、B 确认、A 取消，右摇杆摆牌/收回/换位，LB 炼化、RB 换牌、LT 合成、X 突破、RT 长按准备、Back 五行玉瓶、Start 设置、Y 表情。全部走游戏自己的 UI，不发包。插上手柄启用即可。",
+  "sdkVersion": ">=1.0.0 <2.0.0",
+  "sandboxOnly": false,
+  "libs": ["plugins/GamepadBindings.dll"],
+  "entry": "plugins/Gamepad.dll",
+  "entryType": "YxGamepad.GamepadMod"
+}

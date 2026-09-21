@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net40</TargetFramework>
+    <AssemblyName>Gamepad</AssemblyName>
+    <RootNamespace>YxGamepad</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    <DebugType>none</DebugType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS1701;CS1702</NoWarn>
+    <OutputPath>plugins\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net40" Version="1.0.3" PrivateAssets="all" />
+    <ProjectReference Include="..\..\sdk\Yx.ModSdk.Core\Yx.ModSdk.Core.csproj"><Private>false</Private></ProjectReference>
+    <ProjectReference Include="..\..\sdk\Yx.ModSdk\Yx.ModSdk.csproj"><Private>false</Private></ProjectReference>
+    <!-- 游戏绑定层：只引用它的公开面（RectTransform / object / int / PadCardTarget，无游戏类型），
+         所以本工程不需要 DarkSun / wProtobuf 等游戏 DLL。运行时 GamepadBindings.dll 经 manifest.libs 先于本 DLL 加载。 -->
+    <ProjectReference Include="GamepadBindings.csproj"><Private>false</Private></ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(YxRefs)Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(YxRefs)UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(YxRefs)UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule"><HintPath>$(YxRefs)UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(YxRefs)UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(YxRefs)UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextCoreModule"><HintPath>$(YxRefs)UnityEngine.TextCoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>
